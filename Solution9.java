@@ -36,51 +36,48 @@ import java.util.List;
  * dislikes 中每一组都 不同
  *
  */
-class Solution9 {
+import java.util.*;
 
+public class Solution9 {
     public boolean possibleBipartition(int n, int[][] dislikes) {
-        int[] fa = new int[n + 1];
-        Arrays.fill(fa, -1);
-        List<Integer>[] g = new List[n + 1];
-        for (int i = 0; i < n; ++i) {
-            g[i] = new ArrayList<Integer>();
+        List<List<Integer>> graph = new ArrayList<>();
+        for (int i = 0; i <= n; i++) {
+            graph.add(new ArrayList<>());
         }
-        for (int[] p : dislikes)
-            g[p[0]].add(p[1]);
-            g[p[1]].add(p[0]);
-        for (int i = 1; i <= n; ++i) {
-            for (int j = 0; j < g[i].size(); ++j) {
-                unit(g[i].get(0), g[i].get(j), fa);
-                if (isconnect(i, g[i].get(j), fa)) {
-                    return false;
-                }
+
+        // 构建图
+        for (int[] dislike : dislikes) {
+            graph.get(dislike[0]).add(dislike[1]);
+            graph.get(dislike[1]).add(dislike[0]);
+        }
+
+        int[] colors = new int[n + 1]; // 0:未着色, 1:红色, -1:蓝色
+
+        for (int i = 1; i <= n; i++) {
+            if (colors[i] == 0 && !dfs(graph, colors, i, 1)) {
+                return false;
             }
         }
+
         return true;
     }
 
-    public void unit(int x, int y, int[] fa) {
-        x = findFa(x, fa);
-        y = findFa(y, fa);
-        if (x == y) {
-            return ;
-        }
-        if (fa[x] <= fa[y]) {
-            int temp = x;
-            x = y;
-            y = temp;
-        }
-        fa[x] += fa[y];
-        fa[y] = x;
-    }
+    private boolean dfs(List<List<Integer>> graph, int[] colors, int node, int color) {
+        colors[node] = color;
 
-    public boolean isconnect(int x, int y, int[] fa) {
-        x = findFa(x, fa);
-        y = findFa(y, fa);
-        return x == y;
-    }
+        for (int neighbor : graph.get(node)) {
+            if (colors[neighbor] == 0) {
+                // 如果邻居没有被着色，则递归着色
+                if (!dfs(graph, colors, neighbor, -color)) {
+                    return false;
+                }
+            } else if (colors[neighbor] == color) {
+                // 如果邻居已经被着色且颜色相同，则返回false
+                return false;
+            }
+        }
 
-    public int findFa(int x, int[] fa) {
-        return fa[x] > 0 ? x : (fa[x] = findFa(fa[x], fa));
+        return true;
     }
 }
+
